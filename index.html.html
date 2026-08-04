@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Next Up Anytime Upgrade Simulator</title>
+  <style>
+    .simulator{font-family:Arial,sans-serif;max-width:600px;margin:1em auto;border:1px solid #ccc;padding:1em;border-radius:8px}
+    .row{display:flex;align-items:center;margin-bottom:1em}
+    .row label{width:150px;font-weight:bold}
+    #device-image{width:120px;height:auto;margin-left:1em;border:1px solid #ddd;border-radius:4px}
+    #month-slider{width:100%}
+    table{width:100%;border-collapse:collapse;margin-top:1em}
+    table th,table td{text-align:center;padding:0.5em;border:1px solid #ddd}
+    table th:first-child,table td:first-child{text-align:left;font-weight:bold;background:#f9f9f9}
+    .check{color:green;font-size:1.2em}
+    .cross{color:red;font-size:1.2em}
+
+    /* NEW – smaller, italic disclaimer text */
+    .disclaimer{font-style:italic;font-size:0.85em;margin-top:0.5em;text-align:right}
+  </style>
+</head>
+<body>
+
+<div class="simulator">
+  <h2>Next Up Anytime Upgrade Simulator</h2>
+
+  <!-- Device selector + image -->
+  <div class="row">
+    <label for="device-select">Choose your iPhone:</label>
+    <select id="device-select"></select>
+    <img id="device-image" src="" alt="" />
+  </div>
+
+  <!-- Month slider -->
+  <div>
+    <input type="range" id="month-slider" min="0" max="36" step="1" value="12" />
+    <div style="text-align:center;font-size:0.9em;margin-top:0.2em;">
+      Month: <span id="month-label">0</span>/36
+    </div>
+  </div>
+
+  <!-- Comparison table -->
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>With&nbsp;Next&nbsp;Up&nbsp;Anytime</th>
+        <th>Without&nbsp;Next&nbsp;Up&nbsp;Anytime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Total Monthly Payment:</td>
+        <td id="with-monthly">$0.00/mo + $10/mo</td>
+        <td id="without-monthly">$0.00/mo</td>
+      </tr>
+
+      <tr>
+        <td>Amount You've Paid So Far*:</td>
+        <td id="with-total">$0.00</td>
+        <td id="without-total">$0.00</td>
+      </tr>
+
+      <tr>
+        <td>Amount Still Owed Before Best-Deal Eligible:</td>
+        <td id="with-remaining">$0.00</td>
+        <td id="without-remaining">$0.00</td>
+      </tr>
+
+      <tr>
+        <td>Upgrade Eligible:</td>
+        <td id="with-eligible" class="cross">✗</td>
+        <td id="without-eligible" class="cross">✗</td>
+      </tr>
+
+      <tr>
+        <td>Upgrade Eligible - Best Deals:</td>
+        <td id="with-deal-eligible" class="cross">✗</td>
+        <td id="without-deal-eligible" class="cross">✗</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- NEW italicized disclaimer -->
+  <p class="disclaimer">*does not include sales tax</p>
+</div>
+
+<script>
+  /* ---------- Device data ---------- */
+  const deviceData = {
+    "iPhone 17 Pro 256GB":  {price:1099.99,img:"https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTpCDX-YCIPG_mrh0wa-cpBHkbJdPqFMSJSd6b3MUkyhiIrvT-aUNeXKbhLaX_Ch7a__IPwGlP7kXsHdvUhZ3HyMILTUkvhBT2HZieSU5A&usqp=CAc"},
+    "iPhone 17 Pro 512GB":  {price:1299.99,img:"https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTpCDX-YCIPG_mrh0wa-cpBHkbJdPqFMSJSd6b3MUkyhiIrvT-aUNeXKbhLaX_Ch7a__IPwGlP7kXsHdvUhZ3HyMILTUkvhBT2HZieSU5A&usqp=CAc"},
+    "iPhone 17 Pro 1TB":    {price:1499.99,img:"https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTpCDX-YCIPG_mrh0wa-cpBHkbJdPqFMSJSd6b3MUkyhiIrvT-aUNeXKbhLaX_Ch7a__IPwGlP7kXsHdvUhZ3HyMILTUkvhBT2HZieSU5A&usqp=CAc"},
+    "iPhone 17 Pro Max 256GB":{price:1199.99,img:"https://t-mobile.scene7.com/is/image/Tmusprod/Apple-iPhone-17-Pro-Max-Silver-frontimage"},
+    "iPhone 17 Pro Max 512GB":{price:1399.99,img:"https://t-mobile.scene7.com/is/image/Tmusprod/Apple-iPhone-17-Pro-Max-Silver-frontimage"},
+    "iPhone 17 Pro Max 1TB":  {price:1599.99,img:"https://t-mobile.scene7.com/is/image/Tmusprod/Apple-iPhone-17-Pro-Max-Silver-frontimage"},
+    "iPhone 17 Pro Max 2TB":  {price:1999.99,img:"https://t-mobile.scene7.com/is/image/Tmusprod/Apple-iPhone-17-Pro-Max-Silver-frontimage"}
+  };
+
+  /* ---------- DOM handles ---------- */
+  const sel   = document.getElementById("device-select");
+  const imgEl = document.getElementById("device-image");
+  const slider= document.getElementById("month-slider");
+  const monthLbl = document.getElementById("month-label");
+
+  const withMonthly   = document.getElementById("with-monthly");
+  const withoutMonthly= document.getElementById("without-monthly");
+  const withTotal     = document.getElementById("with-total");
+  const withoutTotal  = document.getElementById("without-total");
+
+  const withRemaining = document.getElementById("with-remaining");
+  const withoutRemaining = document.getElementById("without-remaining");
+
+  const withElig      = document.getElementById("with-eligible");
+  const withoutElig   = document.getElementById("without-eligible");
+  const withDealElig  = document.getElementById("with-deal-eligible");
+  const withoutDealElig = document.getElementById("without-deal-eligible");
+
+  /* ---------- Populate device selector ---------- */
+  Object.keys(deviceData).forEach(name=>{
+    const o=document.createElement("option");
+    o.value=o.textContent=name;
+    sel.appendChild(o);
+  });
+  sel.value="iPhone 17 Pro Max 256GB";
+
+  /* ---------- Core update routine ---------- */
+  function updateSim(){
+    const model = sel.value;
+    const price = deviceData[model].price;
+    imgEl.src   = deviceData[model].img;
+    imgEl.alt   = model;
+
+    const m = +slider.value;
+    monthLbl.textContent = m;
+
+    const baseMonthly = price/36;
+    const monthlyWith = baseMonthly + 10;
+
+    const totalPaidWith    = monthlyWith * Math.min(m,12);
+    const totalPaidWithout = baseMonthly  * Math.min(m,36);
+
+    const remainingWith    = Math.max((monthlyWith*12) - totalPaidWith,0);
+    const remainingWithout = Math.max(price - totalPaidWithout,0);
+
+    withMonthly.textContent    = `$${baseMonthly.toFixed(2)}/mo + $10/mo`;
+    withoutMonthly.textContent = `$${baseMonthly.toFixed(2)}/mo`;
+    withTotal.textContent      = `$${totalPaidWith.toFixed(2)}`;
+    withoutTotal.textContent   = `$${totalPaidWithout.toFixed(2)}`;
+
+    withRemaining.textContent  = `$${remainingWith.toFixed(2)}`;
+    withoutRemaining.textContent = `$${remainingWithout.toFixed(2)}`;
+
+    if(m>=1){ withElig.textContent="✓"; withElig.className="check"; }
+    else     { withElig.textContent="✗"; withElig.className="cross"; }
+    if(m>=36){ withoutElig.textContent="✓"; withoutElig.className="check"; }
+    else     { withoutElig.textContent="✗"; withoutElig.className="cross"; }
+
+    if(m>=12){ withDealElig.textContent="✓"; withDealElig.className="check"; }
+    else     { withDealElig.textContent="✗"; withDealElig.className="cross"; }
+    if(m>=36){ withoutDealElig.textContent="✓"; withoutDealElig.className="check"; }
+    else     { withoutDealElig.textContent="✗"; withoutDealElig.className="cross"; }
+  }
+
+  sel.addEventListener("change", updateSim);
+  slider.addEventListener("input", updateSim);
+  updateSim();
+</script>
+</body>
+</html>
